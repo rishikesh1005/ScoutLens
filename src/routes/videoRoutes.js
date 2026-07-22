@@ -4,17 +4,13 @@ const userAuth = require("../middleware/auth");
 const upload = require("../middleware/multer");
 const Video = require("../models/video");
 const uploadToCloudinary = require("../utils/uploadToCloudinary");
+const cloudinary = require("../config/cloudinary");
+const mongoose  = require("mongoose");
+const authorizedRole = require("../middleware/authorizedRole")
 
-
-videoRouter.post("/video/upload" , userAuth ,upload.single("video") , async (req,res) =>{
+videoRouter.post("/video/upload" , userAuth , authorizedRole("player") ,upload.single("video") , async (req,res) =>{
     try{
         const loggedInUser = req.user;
-    
-        if(loggedInUser.role !== "player"){
-            return res.status(403).send({
-                message: "Only players can upload videos."
-            });
-        }
 
         const {title, description} = req.body;
         const isFeatured = req.body.isFeatured === "true";
@@ -28,20 +24,20 @@ videoRouter.post("/video/upload" , userAuth ,upload.single("video") , async (req
 
         const uploadResult = await uploadToCloudinary(file.buffer);
 
-        console.log(secure_Url)
 
         const video = new Video({
             playerId:loggedInUser._id,
             title,
             description,
-            videoUrl: uploadResult.secure_Url,
-            publicId: uploadResult.public_id,
+            videoUrl: uploadResult.videoUrl,
+            publicId: uploadResult.publicId,
             isFeatured,
         })
 
         await video.save();
         
         res.status(201).send({
+            success: true,
             message:"video uploaded successfully",
             data: video,
         })
@@ -77,7 +73,7 @@ videoRouter.get("/video/feed" , userAuth , async(req,res) => {
 })
 
 // feature/unfeature video
-videoRouter.patch("/video/:videoId/feature", userAuth , async(req,res) => {
+videoRouter.patch("/video/:videoId/feature", userAuth , authorizedRole("player"), async(req,res) => {
     try{
         const videoId = req.params.videoId
 
@@ -137,7 +133,7 @@ videoRouter.patch("/video/:videoId/feature", userAuth , async(req,res) => {
 })
 
 // updating video details
-videoRouter.patch("/video/:videoId" , userAuth , async(req,res) => {
+videoRouter.patch("/video/:videoId" , userAuth , authorizedRole("player") , async(req,res) => {
     try{
         const videoId = req.params.videoId
 
@@ -195,7 +191,7 @@ videoRouter.patch("/video/:videoId" , userAuth , async(req,res) => {
 
 
 // Delete video
-videoRouter.delete("/video/:videoId" , userAuth , async(req,res) => {
+videoRouter.delete("/video/:videoId" , userAuth , authorizedRole("player"), async(req,res) => {
     try{
         const videoId = req.params.videoId;
 

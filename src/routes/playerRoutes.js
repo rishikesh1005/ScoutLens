@@ -2,6 +2,7 @@ const express = require("express");
 const userAuth = require("../middleware/auth");
 const User = require("../models/user");
 const Video = require("../models/video");
+const mongoose  = require("mongoose");
 const playerRouter = express.Router();
 
 playerRouter.get("/player/:playerId", userAuth , async(req,res) => {
