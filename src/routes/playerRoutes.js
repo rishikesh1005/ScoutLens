@@ -3,6 +3,7 @@ const userAuth = require("../middleware/auth");
 const User = require("../models/user");
 const Video = require("../models/video");
 const mongoose  = require("mongoose");
+const authorizedRole = require("../middleware/authorizedRole");
 const playerRouter = express.Router();
 
 playerRouter.get("/player/:playerId", userAuth , async(req,res) => {
@@ -46,6 +47,43 @@ playerRouter.get("/player/:playerId", userAuth , async(req,res) => {
         res.status(500).json({
             "success":false,
             message : err.message
+        })
+    }
+})
+
+playerRouter.get("/players/search" , userAuth , authorizedRole("scout") , async(req,res) => {
+    try{
+        const {name,region,age,sport} = req.query;
+        
+        const filter = {
+            role:"player",
+        }
+        
+        if(name){
+            filter.name = {
+                $regex: name,
+                $options: "i",
+            };
+        }
+
+        if(region) filter["playerProfile.region"] = region;
+        if(age) filter["playerProfile.age"] = age;
+        if(sport) filter["playerProfile.sport"] = sport;
+
+        const player = await User.find(filter).select(
+            "name playerProfile"
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Players profile based on filter",
+            player
+        })
+    }
+    catch(err){
+        return res.status(500).json({
+            success: false,
+            message: err.message
         })
     }
 })
