@@ -20,7 +20,7 @@ const validatePlayerProfile = (playerProfile) => {
     if(!region || !age || !sport){
         throw new Error("Enter all required details!!!")
     }
-    else if(age<5 || age > 70){
+    else if(age < 5 || age > 70){
         throw new Error("Invalid age");
     }
 }

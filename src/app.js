@@ -19,11 +19,15 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const videoRouter = require("./routes/videoRoutes");
 const playerRouter = require("./routes/playerRoutes");
+const bookmarkRouter = require("./routes/bookmarkRoutes");
+const feedbackRouter = require("./routes/feedbackRoutes")
 
 app.use("/" , authRouter);
 app.use("/" , profileRouter);
 app.use("/" , videoRouter);
 app.use("/" , playerRouter);
+app.use("/" , bookmarkRouter);
+app.use("/", feedbackRouter);
 
 connectDB()
 .then(() =>{
