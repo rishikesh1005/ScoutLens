@@ -3,6 +3,9 @@ const profileRouter = express.Router();
 const userAuth = require("../middleware/auth.js");
 const User = require("../models/user.js");
 const { validateEditData } = require("../utils/validation.js");
+const upload = require("../middleware/multer.js");
+const uploadToCloudinary = require("../utils/uploadToCloudinary");
+const cloudinary = require("../config/cloudinary");
 
 profileRouter.get("/profile/view", userAuth ,async (req,res)=>{
     try{
@@ -42,5 +45,54 @@ profileRouter.patch("/profile/edit",userAuth , async(req,res) => {
         })
     }
 })
+
+profileRouter.patch("/profile/photo",userAuth,upload.single("profilePhoto"),async (req, res) => {
+        try {
+
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please upload a profile photo."
+                });
+            }
+
+            const loggedInUser = req.user;
+
+            if (loggedInUser.profilePhotoPublicId) {
+                await cloudinary.uploader.destroy(
+                    loggedInUser.profilePhotoPublicId,
+                    {
+                        resource_type: "image"
+                    }
+                );
+            }
+
+            const uploadResult = await uploadToCloudinary(
+                req.file.buffer,
+                "image",
+                "ScoutLens/ProfilePhotos"
+            );
+
+            loggedInUser.profilePhoto = uploadResult.url;
+            loggedInUser.profilePhotoPublicId = uploadResult.publicId;
+
+            await loggedInUser.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Profile photo updated successfully.",
+                profilePhoto: loggedInUser.profilePhoto
+            });
+
+        } catch (error) {
+
+            return res.status(500).json({
+                success: false,
+                message: error.message
+            });
+
+        }
+    }
+);
 
 module.exports = profileRouter

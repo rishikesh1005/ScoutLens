@@ -1,19 +1,26 @@
 const cloudinary = require("../config/cloudinary");
 
-const uploadToCloudinary = async (file) => {
+const uploadToCloudinary = async (file, resourceType, folder) => {
     const uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream({ resource_type: "video" }, (error, result) => {
-            if (error) {
-                return reject(error);
+        cloudinary.uploader.upload_stream(
+            {
+                resource_type: resourceType,
+                folder: folder,
+            },
+            (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+
+                resolve(result);
             }
-            return resolve(result);
-        }).end(file);
+        ).end(file);
     });
 
     return {
-        videoUrl: uploadResult.secure_url,
-        publicId: uploadResult.public_id
+        url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
     };
-}
+};
 
 module.exports = uploadToCloudinary;

@@ -22,17 +22,20 @@ videoRouter.post("/video/upload" , userAuth , authorizedRole("player") ,upload.s
             });
         } 
 
-        const uploadResult = await uploadToCloudinary(file.buffer);
-
+        const uploadResult = await uploadToCloudinary(
+            req.file.buffer,
+            "video",
+            "ScoutLens/Videos"
+        );
 
         const video = new Video({
-            playerId:loggedInUser._id,
             title,
             description,
-            videoUrl: uploadResult.videoUrl,
+            playerId: loggedInUser._id,
+            videoUrl: uploadResult.url,
             publicId: uploadResult.publicId,
-            isFeatured,
-        })
+            isFeatured
+        });
 
         await video.save();
         

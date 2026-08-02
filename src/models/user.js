@@ -28,6 +28,11 @@ const scoutSchema = new mongoose.Schema({
     scoutId:{
         type:String,
     },
+    sports:[{
+        type: String,
+        required:true,
+        trim:true,
+    }],
     verificationStatus:{
         type: String,
         enum: ["approved", "rejected", "pending"],
@@ -70,6 +75,14 @@ const userSchema = new mongoose.Schema({
             values: ["player", "scout" , "admin"],
         },
         required:true,
+    },
+    profilePhoto: {
+        type: String,
+        default: "https://res.cloudinary.com/dskh0pb34/image/upload/v1785397231/dummyProfile_csieqi.jpg"
+    },
+    profilePhotoPublicId: {
+        type: String,
+        default: null
     },
     playerProfile:playerSchema,
     scoutProfile:scoutSchema,
