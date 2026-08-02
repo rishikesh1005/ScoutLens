@@ -143,4 +143,69 @@ playerRouter.get("/players/search" , userAuth , authorizedRole("scout") , async(
     }
 })
 
+playerRouter.get("/player/dashboard",userAuth,authorizedRole("player"),async (req, res) => {
+    try {
+        const playerId = req.user._id;
+
+        const player = await User.findById(playerId)
+            .select("name profilePhoto playerProfile createdAt");
+
+        if (!player) {
+            return res.status(404).json({
+                success: false,
+                message: "Player not found."
+            });
+        }
+
+        const playerVideos = await Video.find({ playerId })
+            .select(
+                "title description videoUrl isFeatured createdAt"
+            )
+            .sort({ createdAt: -1 });
+
+        const featuredVideo = playerVideos.find(video => video.isFeatured) || null;
+
+        const videoIds = playerVideos.map(video => video._id);
+
+        const feedbackReceived = await Feedback.countDocuments({
+            videoId: {
+                $in: videoIds
+            }
+        });
+
+        const recentFeedback = await Feedback.find({
+            videoId: {
+                $in: videoIds
+            }
+        })  
+            .populate("scoutId", "name profilePhoto")
+            .select("message scoutId createdAt")
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        const bookmarkedBy = await Bookmark.countDocuments({playerId});
+
+        return res.status(200).json({
+            success: true,
+            message: "Player dashboard fetched successfully.",
+            player,
+            stats: {
+                videosUploaded: playerVideos.length,
+                feedbackReceived,
+                bookmarkedBy
+            },
+            featuredVideo,
+            videos: playerVideos,
+            recentFeedback
+        });
+
+    } 
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
 module.exports = playerRouter;

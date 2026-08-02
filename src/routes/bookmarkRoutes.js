@@ -5,6 +5,7 @@ const Bookmark = require("../models/bookmark");
 const mongoose = require("mongoose");
 const authorizedRole = require("../middleware/authorizedRole");
 const User = require("../models/user");
+const Notification = require("../models/notification");
 
 bookmarkRouter.post("/player/:playerId/bookmark" , userAuth, authorizedRole('scout') , async(req,res) => {
     try{
@@ -44,6 +45,16 @@ bookmarkRouter.post("/player/:playerId/bookmark" , userAuth, authorizedRole('sco
         })
 
         await bookmark.save();
+
+        const notification = new Notification({
+            receiverId: playerId,
+            senderId: req.user._id,
+            type: "bookmark",
+            message: `${req.user.name} bookmarked your profile.`,
+            referenceId: bookmark._id,
+        });
+
+        await notification.save();
 
         return res.status(201).json({
             success: true,

@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const Feedback = require("../models/feedback");
 const Video = require("../models/video");
 const Reply = require("../models/reply");
+const Notification = require("../models/notification");
 
 
 feedbackRoute.post("/video/:videoId/feedback", userAuth , authorizedRole("scout"), async(req,res) => {
@@ -55,6 +56,16 @@ feedbackRoute.post("/video/:videoId/feedback", userAuth , authorizedRole("scout"
         })
 
         await feedback.save();
+
+        const notification = new Notification({
+            receiverId: video.playerId,
+            senderId: req.user._id,
+            type: "feedback",
+            message: `${req.user.name} left feedback on your video.`,
+            referenceId: feedback._id,
+        });
+
+        await notification.save();
 
         return res.status(201).json({
             success: true,
@@ -219,6 +230,16 @@ feedbackRoute.post("/feedback/:feedbackId/reply" , userAuth , authorizedRole('pl
         })
 
         await reply.save();
+
+        const notification = new Notification({
+            receiverId: feedback.scoutId,
+            senderId: req.user._id,
+            type: "reply",
+            message: `${req.user.name} replied to your feedback.`,
+            referenceId: reply._id,
+        });
+
+        await notification.save();
 
         return res.status(201).json({
             success: true,
